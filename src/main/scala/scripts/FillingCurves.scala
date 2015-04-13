@@ -6,6 +6,8 @@ import scala.math.Pi
 import breeze.math._
 import breeze.numerics._
 import scala.annotation._
+import scala.concurrent._
+import ExecutionContext.Implicits.global
 
 /**
  * @author gadgil
@@ -25,10 +27,15 @@ object FillingCurves {
                             (pow(sin (y), 2) + cos(Pi / (2 * m)))/
                             (pow(cos(y), 2))
                             )
-                            
+    
+   val num1 = pow(sin(((Pi * g) - (2.0 * m * y))/((4.0 * g) - (2.0 * m))), 2)
+             
+   val num2 = cos(Pi/ ((4 *g) - (2 * m)))
+   
+   val den = pow(cos(((Pi * g) - (2.0 * m * y))/((4.0 * g) - (2.0 * m))), 2)
+     
     val rhsSecond =     (((8.0 * g) - (4.0 * m)) / ((8.0 * g) - 4.0)) * acosh(
-        (pow(sin(((Pi * g) - (2 * m * y))/((4 * g) - (2 * m))), 2) + cos(Pi/ ((4 *g) - (2 * m))))/
-        (pow(cos(((Pi * g) - (2 * m * y))/((4 * g) - (2 * m))), 2))
+        (num1 + num2)/den
         )
     
     val ineq = lhs <= (rhsFirst + rhsSecond)
@@ -49,5 +56,10 @@ object FillingCurves {
         val param = Param.nextRandom
         if (param.ineq) check(n -1) else Some(param)      
         }
+  }
+  
+  def concCheck(n: Int, copies: Int) = {
+    val results = (1 to copies) map ((_) => Future(check(n)))
+    results map ((res) => res.onSuccess({case resOpt => println(resOpt)}))
   }
 }
