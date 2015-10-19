@@ -10,7 +10,7 @@ libraryDependencies  ++= Seq(
   // native libraries are not included by default. add this if you want them (as of 0.7)
   // native libraries greatly improve performance, but increase jar sizes.
   "org.scalanlp" %% "breeze-natives" % "0.11.2",
-  "com.lihaoyi" %% "ammonite-repl" % "0.2.7" % "test"
+  "com.lihaoyi" % "ammonite-repl" % "0.4.8" % "test" cross CrossVersion.full
   )
 
 resolvers ++= Seq(
@@ -20,4 +20,4 @@ resolvers ++= Seq(
   "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
   )
 
-initialCommands in console := "ammonite.repl.Repl.main(null)"
+initialCommands in (Test, console) := """ammonite.repl.Repl.run("")"""
