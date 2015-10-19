@@ -1,6 +1,9 @@
 *.class
 *.log
 
+.settings/
+.cache-main
+
 # sbt specific
 .cache
 .history
@@ -19,3 +22,4 @@ project/plugins/project/
 .classpath
 .project
 *~
+/bin/
