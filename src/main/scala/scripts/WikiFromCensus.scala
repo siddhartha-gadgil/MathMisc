@@ -13,9 +13,16 @@ object WikiFromCensus {
   
   lazy val rawtab = lines map (_.split(",").toList)
   
+  lazy val district = rawtab(2)(3).split(":-")(1)
+  
   def isInt(s : String) = !Try(s.toInt).toOption.isEmpty
   
-  def isVillage(l: List[String]) = isInt(l(0)) && !isInt(l(1))
+  def hasPeople: String => Boolean = {
+    case Number(k) => k >0
+    case _ => false
+  }
+  
+  def isVillage(l: List[String]) = isInt(l(0)) && !isInt(l(1)) &&hasPeople(l(5))
   
   val tab = rawtab filter (isVillage)
   
@@ -31,7 +38,7 @@ object WikiFromCensus {
     case "a" => "< 5 km"
     case "b" => "5-10 kms"
     case "c" => "> 10 km"
-    case _ => "???"
+    case _ => {println(s"found $s when matching for abc"); "???"}
   }
     
   def numOrNearest(s: String, desc: String) = s match {
@@ -55,11 +62,14 @@ object WikiFromCensus {
     val items = List(row(119), row(120), row(121)) filter (_ != "")
     if (items.isEmpty) "" 
       else 
-        s"""${row(1)} is engaged in the manufacture of following items (in decreasing order of importance): ${items.mkString(",")}"""
+        s"""
+          == Manufacture ==
+          
+          ${row(1)} is engaged in the manufacture of following items (in decreasing order of importance): ${items.mkString(",")}"""
   }
   
   def savePage(row: List[String]) = {
-    val filename = s"data/${row(1)}.txt"
+    val filename = s"data/${row(1)}.wiki"
     val f = new PrintWriter(filename)
     f.println(page(row))
     f.close()
@@ -68,27 +78,41 @@ object WikiFromCensus {
   
   def page(row : List[String]) = 
     s"""
-${row(1)} is a village in the Gadchiroli  with an area of ${row(3)} hectares, harbouring ${row(5)} households and with total population of ${row(4)} as per the 2011 Census. The nearest town is ${row(101)} at a distance of ${abc(row(102))}. 
+${row(1)} is a village in the ${district} district  with an area of ${row(3)} hectares, harbouring ${row(5)} households and with total population of ${row(4)} as per the 2011 Census. The nearest town is ${row(101)} at a distance of ${abc(row(102))}. 
             
-Educational facilities
+== Educational facilities ==
 
 ${numOrNearest(row(6), "Pre-primary schools")}
 ${numOrNearest(row(7), "Primary schools")}
 ${numOrNearest(row(8), "Middle schools")}
 ${numOrNearest(row(9), "Secondary schools")}
 ${numOrNearest(row(10), "Senior secondary schools")}
-
+${numOrNearest(row(11), "Degree colleges of arts  science & commerce")}
+${numOrNearest(row(12), "Engineering colleges")}
+${numOrNearest(row(13), "Medical colleges")}
+${numOrNearest(row(14), "Management institutes")}
+${numOrNearest(row(15), "Polytechnics")}
+${numOrNearest(row(16), "Vocational training schools")}
+${numOrNearest(row(17), "Non-formal training centres")}
+${numOrNearest(row(18), "special schools for the disabled")}
 ${numOrBlank(row(19), "other educational institutes")}
 
-Drinking water
+== Medical facilities (Governmental) ==
+
+${numOrNearest(row(20), "Community Health centres")}
+
+== Drinking water ==
+
 ${available(row(38), "Drinking water from taps")}
 ${available(row(39), "Drinking water from wells")}
 
-Communication and transport
+== Communication and transport ==
+
 ${hasOrNearest(row(50), "Post office")}
 ${hasOrNearest(row(51), "Sub Post office")}
 
-Land use
+== Land use ==
+
 ${row(1)} exhibits the following land use pattern (area in hectares):
 Forests: ${row(103)}
 Area under Non-agricultural Uses : ${row(104)}
@@ -109,7 +133,6 @@ Tanks/Lakes: ${row(116)}
 Water Falls: ${row(117)} 
 Others: ${row(118)}
 
-Manufacture
 ${manuf(row)}
                   """
   
